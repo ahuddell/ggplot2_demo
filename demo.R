@@ -118,6 +118,21 @@ ggplot() +
   ggtitle('linear model fit with 95% confidence interval')
 
 
+
+# plot facets -------------------------------------------------------------
+
+#another way to visualize differences among species would be to "facet" them into separate plots
+
+ggplot() +
+  geom_point(data=iris, aes(x=Petal.Length, y=Petal.Width))+
+  theme_bw() +
+  xlab('petal length (cm)') +
+  ylab('petal width (cm)') +
+  geom_smooth(data=iris, aes(x=Petal.Length, y=Petal.Width), method="lm") +
+  ggtitle('linear model fit with 95% confidence interval') +
+  facet_wrap(~Species)
+
+
 # box plot ----------------------------------------------------------------
 
 #Now let's look at another type of plot for discrete and continuous data--a boxplot
@@ -146,7 +161,7 @@ ggplot(data=iris, aes(x=Species, y=Petal.Width)) +
   geom_jitter(width=0.2, alpha=.3)
 
 
-# plot a line plot of Petal Length means and standard errors by species  ------------------------------------------------------
+# plot a bar plot of Sepal Width means and standard errors by species  ------------------------------------------------------
 
 # We'll have to wrangle our data to 
 # Calculate the mean and standard errors by species
@@ -154,16 +169,60 @@ ggplot(data=iris, aes(x=Species, y=Petal.Width)) +
 
 iris %>% #use the iris dataset
   group_by(Species) %>% #set the grouping variable we want to summarize
-  summarise(mean_se(Petal.Length, mult=2)) #calculate the mean and values for 2 standard errors above and below the mean
+  summarise(mean_se(Sepal.Width, mult=2)) #calculate the mean and values for 2 standard errors above and below the mean
 
 # One cool thing about the tidyverse is that you can send the output of your 
 # data wrangling directly into the plot
 
 iris %>% #use the iris dataset
   group_by(Species) %>% #set the grouping variable we want to summarize
-  summarise(mean_se(Petal.Length, mult=2)) %>% #calculate the mean and values for 2 standard errors above and below the mean
+  summarise(mean_se(Sepal.Width, mult=2)) %>% #calculate the mean and values for 2 standard errors above and below the mean
   #now we pipe that directly into a ggplot
   ggplot(aes(x=Species, y=y, fill=Species)) + #make the colors different by species
   geom_col()+  #add the bar chart
+  ylab('sepal width (cm)')+
   geom_errorbar(aes(x=Species, ymin=ymin, ymax=ymax), width = 0.5)+ #specify the width
   theme_bw()
+
+
+# adding letters to indicate statistical differences ----------------------
+
+
+#now let's do a statistical test on these means
+hist(iris$Sepal.Width) #the data appear to be normal
+shapiro.test(iris$Sepal.Width) #this also suggests the data are normally distributed
+
+#fit a linear model to the Sepal Width with x being species
+lm.iris<-lm(Sepal.Width~Species,data=iris) 
+summary(lm.iris) #examine model
+
+
+iris.aov<-aov(lm.iris) 
+summary(iris.aov) #there appear to be significant differences among species, but which?
+
+#Run a Tukey HSD test to detect treatment differences
+TukeyHSD(iris.aov)
+
+
+
+#we find that setosa is significantly higher than either species, 
+#and that veriscolor is significantly lower than virginia
+#so they would each get their own unique letter since they are statistically P<0.05
+#different from each other
+
+
+#let's add letter annotations to denote this on the figure
+iris %>% #use the iris dataset
+  group_by(Species) %>% #set the grouping variable we want to summarize
+  summarise(mean_se(Sepal.Width, mult=2)) %>% #calculate the mean and values for 2 standard errors above and below the mean
+  #now we pipe that directly into a ggplot %>%
+  ggplot(aes(x=Species, y=y, fill=Species)) + #make the colors different by species
+  geom_col()+  #add the bar chart
+  ylab('sepal width (cm)')+
+  geom_errorbar(aes(x=Species, ymin=ymin, ymax=ymax), width = 0.5)+ #specify the width
+  theme_bw()+
+  geom_text(aes(label = c('a','b','c'), y = c(3.7,3,3.25)), size=5, fontface="bold") 
+  
+
+
+
