@@ -2,14 +2,12 @@
 #install packages if you need them
 #install.packages("datasets")
 #install.packages("tidyverse")
-#install.packages("viridis")  
 
 
 
 #load the packages
 library(datasets) # Load this for the iris dataset
 library(tidyverse) #Load this for ggplot
-library(viridis)  # Load viridis for the viridis palette
 
 
 # load and view the data --------------------------------------------------
